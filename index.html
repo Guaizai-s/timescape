@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+    <title>TimeScape</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="masthead">
+        <span class="brand">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="brand-orbit" d="M16 4a12 12 0 1 0 12 12"/><path class="brand-hand" d="M16 9v7l5 3"/><circle cx="26" cy="6" r="4"/></svg></span>
+          <span class="wordmark">TimeScape</span>
+        </span>
+        <div class="header-actions">
+          <button class="icon-button theme-button" id="theme-button" type="button" aria-label="切换配色模式"></button>
+          <button class="icon-button" id="more-button" type="button" popovertarget="more-menu" aria-label="更多选项" title="更多选项"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+          <div id="more-menu" class="more-menu" popover>
+            <button id="demo-button" class="text-button" type="button"></button>
+            <button id="export-button" class="text-button" type="button">导出备份</button>
+            <button id="import-button" class="text-button" type="button">导入备份</button>
+          </div>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+      </header>
+
+      <main id="main">
+        <p id="storage-message" class="storage-message" role="alert" hidden></p>
+        <div id="today-view">
+          <div class="page-heading day-heading">
+            <h1 id="day-heading">今天</h1>
+            <label class="date-control">
+              <span id="day-caption"></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              <input id="day-picker" type="date" aria-label="选择日期" min="0001-01-01" max="9999-12-31">
+            </label>
+          </div>
+
+          <div class="week-strip" id="week-strip" role="group" aria-label="本周日期"></div>
+
+          <div class="day-columns">
+            <section class="day-section" aria-labelledby="timeline-title">
+              <div class="section-heading">
+                <h2 id="timeline-title">今日行程</h2>
+              </div>
+              <div id="timeline"></div>
+            </section>
+
+            <section class="day-section" aria-labelledby="tasks-title">
+              <div class="section-heading">
+                <h2 id="tasks-title">待办</h2>
+              </div>
+              <div id="task-list"></div>
+              <div id="notice-list" aria-label="仅知晓的事项"></div>
+            </section>
+          </div>
+        </div>
+
+        <div id="map-view" hidden>
+          <div class="page-heading">
+            <h1>日程地图</h1>
+          </div>
+          <div id="map-panel" class="map-panel">
+            <div class="map-toolbar">
+              <label class="date-control">
+                <span id="map-date-caption"></span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+                <input id="map-date-picker" type="date" aria-label="定位地图日期" min="0001-01-01" max="9999-12-31">
+              </label>
+              <button id="map-today" class="text-button" type="button">今天</button>
+              <button id="map-fit" class="text-button map-fit" type="button" title="显示所有安排（快捷键 0）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>全局</button>
+            </div>
+            <div id="schedule-map" class="schedule-map" role="region" aria-label="日程地图，横向是日期，纵向是主题及关联待办" aria-describedby="map-help" tabindex="0"></div>
+            <div class="map-footer">
+              <span id="map-range"></span>
+              <div class="map-zoom-controls" role="group" aria-label="地图缩放">
+                <button id="map-zoom-out" class="icon-button" type="button" aria-label="缩小地图"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                <input id="map-zoom" type="range" min="0" max="100" step="1" value="60" aria-label="缩放比例">
+                <output id="map-zoom-value" for="map-zoom"></output>
+                <button id="map-zoom-in" class="icon-button" type="button" aria-label="放大地图"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+              </div>
+            </div>
+            <p id="map-help" class="visually-hidden">拖动地图平移，滚轮或双指缩放。方向键平移，加减键缩放，0 键查看全局。点击主题聚焦，点击日期查看当天，点击事项编辑；远景中先点击放大。</p>
+          </div>
+        </div>
+
+      </main>
+
+      <div class="add-scrim" id="add-scrim" hidden></div>
+      <div class="add-options" id="add-options" role="group" aria-label="新建类型" hidden>
+        <button type="button" data-new-kind="notice"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5m0-9v.1"/></svg>仅知晓</button>
+        <button type="button" data-new-kind="task"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12 3 3 5-6"/></svg>新建待办</button>
+        <button type="button" data-new-kind="event"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4m8-4v4M4 10h16"/></svg>新建日程</button>
+      </div>
+      <button class="add-fab" id="new-entry" type="button" aria-label="新建安排" aria-controls="add-options" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="fab-label">新建安排</span>
+      </button>
+      <nav class="bottom-nav" aria-label="主导航">
+        <button type="button" data-view="today" aria-current="page">
+          <span class="nav-indicator"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2.5"/><path d="M7.5 3.5v4m9-4v4M4 10.5h16"/></svg></span>
+          <span>今天</span>
+        </button>
+        <button type="button" data-view="map">
+          <span class="nav-indicator"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 6 5.7-2.5 5.6 2.5 5.7-2.5V18l-5.7 2.5L9.2 18l-5.7 2.5V6Zm5.7-2.5V18m5.6-12v14.5"/></svg></span>
+          <span>日程地图</span>
+        </button>
+      </nav>
+    </div>
+
+    <dialog class="editor" id="editor" aria-labelledby="editor-heading">
+      <div class="editor-heading">
+        <button id="close-editor" class="text-button" type="button" autofocus>取消</button>
+        <h2 id="editor-heading">新建安排</h2>
+      </div>
+      <form class="quick-add" id="quick-add">
+        <label for="quick-text">一句话录入</label>
+        <div class="quick-row">
+          <input id="quick-text" type="text" maxlength="120" placeholder="例如 明天下午三点上课" enterkeyhint="done" required>
+          <button class="quick-submit" type="submit">识别</button>
+        </div>
+        <p class="quick-result" id="quick-result" role="status"></p>
+      </form>
+      <form id="editor-form">
+        <div class="editor-fields">
+          <label class="field">名称<input name="title" required maxlength="120" placeholder="例如 上课"></label>
+          <div class="field-row">
+            <label class="field">类型<select name="kind"><option value="event">日程</option><option value="task">待办</option><option value="notice">仅知晓</option></select></label>
+            <label class="field">主题<select name="category"><option>课程</option><option>备考</option><option>校园</option><option>生活</option></select></label>
+          </div>
+          <div class="field-row">
+            <label class="field">开始日期<input name="date" type="date" min="0001-01-01" max="9999-12-31" required></label>
+            <label class="field">结束日期<input name="endDate" type="date" min="0001-01-01" max="9999-12-31" required></label>
+          </div>
+          <label class="all-day-control" id="all-day-field"><span>全天</span><input name="allDay" type="checkbox" role="switch"></label>
+          <div class="field-row" id="time-fields">
+            <label class="field">开始时间<input name="start" type="time"></label>
+            <label class="field">结束时间（选填）<input name="end" type="time"></label>
+          </div>
+          <label class="field" id="link-field" hidden>关联日程<select name="linkId"></select></label>
+          <div class="linked-tasks" id="linked-tasks" hidden></div>
+        </div>
+        <p class="form-message" id="form-message" role="alert" hidden></p>
+        <div class="editor-actions">
+          <button class="text-button delete-button" id="delete-entry" type="button" hidden>删除</button>
+          <button class="primary-button" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="announcement" class="toast" role="status" aria-atomic="true" hidden>
+      <svg class="toast-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+      <span id="announcement-text"></span>
+      <button id="undo-action" type="button" hidden>撤销</button>
+    </div>
+  </body>
+</html>
